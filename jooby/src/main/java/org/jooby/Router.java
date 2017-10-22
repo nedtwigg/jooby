@@ -203,6 +203,16 @@
  */
 package org.jooby;
 
+import static org.jooby.Route.CONNECT;
+import static org.jooby.Route.DELETE;
+import static org.jooby.Route.GET;
+import static org.jooby.Route.HEAD;
+import static org.jooby.Route.OPTIONS;
+import static org.jooby.Route.PATCH;
+import static org.jooby.Route.POST;
+import static org.jooby.Route.PUT;
+import static org.jooby.Route.TRACE;
+
 import java.net.URLDecoder;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -218,6 +228,12 @@ import com.google.common.net.PercentEscaper;
 import org.jooby.Route.Mapper;
 import org.jooby.funzy.Try;
 import org.jooby.handlers.AssetHandler;
+import org.jooby.internal.handlers.HeadHandler;
+import org.jooby.internal.handlers.OptionsHandler;
+import org.jooby.internal.handlers.TraceHandler;
+import org.jooby.internal.mvc.MvcWebSocket;
+import org.jooby.mvc.Consumes;
+import org.jooby.mvc.Produces;
 
 import javax.annotation.Nonnull;
 
@@ -326,7 +342,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition use(String path, Route.Filter filter);
+  default Route.Definition use(String path, Route.Filter filter) {
+    return appendDefinition("*", path, filter);
+  }
 
   /**
    * Append a new filter that matches the given method and path.
@@ -337,7 +355,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition use(String method, String path, Route.Filter filter);
+  default Route.Definition use(String method, String path, Route.Filter filter) {
+    return appendDefinition(method, path, filter);
+  }
 
   /**
    * Append a new route handler that matches the given method and path. Like
@@ -350,7 +370,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition use(String method, String path, Route.Handler handler);
+  default Route.Definition use(String method, String path, Route.Handler handler) {
+    return appendDefinition(method, path, handler);
+  }
 
   /**
    * Append a new route handler that matches any method under the given path. Like
@@ -362,7 +384,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition use(String path, Route.Handler handler);
+  default Route.Definition use(String path, Route.Handler handler) {
+    return appendDefinition("*", path, handler);
+  }
 
   /**
    * Append a new route handler that matches any method under the given path.
@@ -372,7 +396,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition use(String path, Route.OneArgHandler handler);
+  default Route.Definition use(String path, Route.OneArgHandler handler) {
+    return appendDefinition("*", path, handler);
+  }
 
   /**
    * Append a route that matches the HTTP GET method:
@@ -405,7 +431,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition get(String path, Route.Handler handler);
+  default Route.Definition get(String path, Route.Handler handler) {
+    return appendDefinition(GET, path, handler);
+  }
 
   /**
    * Append two routes that matches the HTTP GET method on the same handler:
@@ -422,7 +450,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection get(String path1, String path2, Route.Handler handler);
+  default Route.Collection get(String path1, String path2, Route.Handler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{get(path1, handler), get(path2, handler)});
+  }
 
   /**
    * Append three routes that matches the HTTP GET method on the same handler:
@@ -440,7 +471,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection get(String path1, String path2, String path3, Route.Handler handler);
+  default Route.Collection get(String path1, String path2, String path3, Route.Handler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{get(path1, handler), get(path2, handler), get(path3, handler)});
+  }
 
   /**
    * Append route that matches the HTTP GET method:
@@ -473,7 +507,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition get(String path, Route.OneArgHandler handler);
+  default Route.Definition get(String path, Route.OneArgHandler handler) {
+    return appendDefinition(GET, path, handler);
+  }
 
   /**
    * Append three routes that matches the HTTP GET method on the same handler:
@@ -490,7 +526,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection get(String path1, String path2, Route.OneArgHandler handler);
+  default Route.Collection get(String path1, String path2, Route.OneArgHandler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{get(path1, handler), get(path2, handler)});
+  }
 
   /**
    * Append three routes that matches the HTTP GET method on the same handler:
@@ -508,7 +547,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection get(String path1, String path2, String path3, Route.OneArgHandler handler);
+  default Route.Collection get(String path1, String path2, String path3, Route.OneArgHandler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{get(path1, handler), get(path2, handler), get(path3, handler)});
+  }
 
   /**
    * Append route that matches HTTP GET method:
@@ -541,7 +583,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition get(String path, Route.ZeroArgHandler handler);
+  default Route.Definition get(String path, Route.ZeroArgHandler handler) {
+    return appendDefinition(GET, path, handler);
+  }
 
   /**
    * Append three routes that matches the HTTP GET method on the same handler:
@@ -558,7 +602,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection get(String path1, String path2, Route.ZeroArgHandler handler);
+  default Route.Collection get(String path1, String path2, Route.ZeroArgHandler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{get(path1, handler), get(path2, handler)});
+  }
 
   /**
    * Append three routes that matches HTTP GET method on the same handler:
@@ -576,7 +623,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection get(String path1, String path2, String path3, Route.ZeroArgHandler handler);
+  default Route.Collection get(String path1, String path2, String path3, Route.ZeroArgHandler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{get(path1, handler), get(path2, handler), get(path3, handler)});
+  }
 
   /**
    * Append a filter that matches HTTP GET method:
@@ -592,7 +642,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition get(String path, Route.Filter filter);
+  default Route.Definition get(String path, Route.Filter filter) {
+    return appendDefinition(GET, path, filter);
+  }
 
   /**
    * Append three routes that matches the HTTP GET method on the same handler:
@@ -610,7 +662,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection get(String path1, String path2, Route.Filter filter);
+  default Route.Collection get(String path1, String path2, Route.Filter filter) {
+    return new Route.Collection(new Route.Definition[]{get(path1, filter), get(path2, filter)});
+  }
 
   /**
    * Append three routes that supports HTTP GET method on the same handler:
@@ -628,7 +682,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection get(String path1, String path2, String path3, Route.Filter filter);
+  default Route.Collection get(String path1, String path2, String path3, Route.Filter filter) {
+    return new Route.Collection(
+            new Route.Definition[]{get(path1, filter), get(path2, filter), get(path3, filter)});
+  }
 
   /**
    * Append a route that supports HTTP POST method:
@@ -661,7 +718,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition post(String path, Route.Handler handler);
+  default Route.Definition post(String path, Route.Handler handler) {
+    return appendDefinition(POST, path, handler);
+  }
 
   /**
    * Append three routes that supports HTTP POST method on the same handler:
@@ -678,7 +737,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection post(String path1, String path2, Route.Handler handler);
+  default Route.Collection post(String path1, String path2, Route.Handler handler) {
+    return new Route.Collection(
+        new Route.Definition[]{post(path1, handler), post(path2, handler)});
+  }
 
   /**
    * Append three routes that supports HTTP POST method on the same handler:
@@ -696,7 +758,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection post(String path1, String path2, String path3, Route.Handler handler);
+  default Route.Collection post(String path1, String path2, String path3, Route.Handler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{post(path1, handler), post(path2, handler), post(path3, handler)});
+  }
 
   /**
    * Append route that supports HTTP POST method:
@@ -729,7 +794,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition post(String path, Route.OneArgHandler handler);
+  default Route.Definition post(String path, Route.OneArgHandler handler) {
+    return appendDefinition(POST, path, handler);
+  }
 
   /**
    * Append three routes that supports HTTP POST method on the same handler:
@@ -746,7 +813,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection post(String path1, String path2, Route.OneArgHandler handler);
+  default Route.Collection post(String path1, String path2, Route.OneArgHandler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{post(path1, handler), post(path2, handler)});
+  }
 
   /**
    * Append three routes that supports HTTP POST method on the same handler:
@@ -764,7 +834,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection post(String path1, String path2, String path3, Route.OneArgHandler handler);
+  default Route.Collection post(String path1, String path2, String path3, Route.OneArgHandler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{post(path1, handler), post(path2, handler), post(path3, handler)});
+  }
 
   /**
    * Append route that supports HTTP POST method:
@@ -797,7 +870,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition post(String path, Route.ZeroArgHandler handler);
+  default Route.Definition post(String path, Route.ZeroArgHandler handler) {
+    return appendDefinition(POST, path, handler);
+  }
 
   /**
    * Append three routes that supports HTTP POST method on the same handler:
@@ -814,7 +889,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection post(String path1, String path2, Route.ZeroArgHandler handler);
+  default Route.Collection post(String path1, String path2, Route.ZeroArgHandler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{post(path1, handler), post(path2, handler)});
+  }
 
   /**
    * Append three routes that supports HTTP POST method on the same handler:
@@ -832,7 +910,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection post(String path1, String path2, String path3, Route.ZeroArgHandler handler);
+  default Route.Collection post(String path1, String path2, String path3, Route.ZeroArgHandler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{post(path1, handler), post(path2, handler), post(path3, handler)});
+  }
 
   /**
    * Append a route that supports HTTP POST method:
@@ -848,7 +929,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition post(String path, Route.Filter filter);
+  default Route.Definition post(String path, Route.Filter filter) {
+    return appendDefinition(POST, path, filter);
+  }
 
   /**
    * Append three routes that supports HTTP POST method on the same handler:
@@ -865,7 +948,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection post(String path1, String path2, Route.Filter filter);
+  default Route.Collection post(String path1, String path2, Route.Filter filter) {
+    return new Route.Collection(
+            new Route.Definition[]{post(path1, filter), post(path2, filter)});
+  }
 
   /**
    * Append three routes that supports HTTP POST method on the same handler:
@@ -883,7 +969,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection post(String path1, String path2, String path3, Route.Filter filter);
+  default Route.Collection post(String path1, String path2, String path3, Route.Filter filter) {
+    return new Route.Collection(
+            new Route.Definition[]{post(path1, filter), post(path2, filter), post(path3, filter)});
+  }
 
   /**
    * Append a route that supports HTTP HEAD method:
@@ -899,7 +988,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition head(String path, Route.Handler handler);
+  default Route.Definition head(String path, Route.Handler handler) {
+    return appendDefinition(HEAD, path, handler);
+  }
 
   /**
    * Append route that supports HTTP HEAD method:
@@ -915,7 +1006,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition head(String path, Route.OneArgHandler handler);
+  default Route.Definition head(String path, Route.OneArgHandler handler) {
+    return appendDefinition(HEAD, path, handler);
+  }
 
   /**
    * Append route that supports HTTP HEAD method:
@@ -931,7 +1024,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition head(String path, Route.ZeroArgHandler handler);
+  default Route.Definition head(String path, Route.ZeroArgHandler handler) {
+    return appendDefinition(HEAD, path, handler);
+  }
 
   /**
    * Append a route that supports HTTP HEAD method:
@@ -947,7 +1042,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition head(String path, Route.Filter filter);
+  default Route.Definition head(String path, Route.Filter filter) {
+    return appendDefinition(HEAD, path, filter);
+  }
 
   /**
    * Append a new route that automatically handles HEAD request from existing GET routes.
@@ -961,7 +1058,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition head();
+  default Route.Definition head() {
+    return appendDefinition(HEAD, "*", Jooby.filter(HeadHandler.class)).name("*.head");
+  }
 
   /**
    * Append a route that supports HTTP OPTIONS method:
@@ -977,7 +1076,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition options(String path, Route.Handler handler);
+  default Route.Definition options(String path, Route.Handler handler) {
+    return appendDefinition(OPTIONS, path, handler);
+  }
 
   /**
    * Append route that supports HTTP OPTIONS method:
@@ -993,7 +1094,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition options(String path, Route.OneArgHandler handler);
+  default Route.Definition options(String path, Route.OneArgHandler handler) {
+    return appendDefinition(OPTIONS, path, handler);
+  }
 
   /**
    * Append route that supports HTTP OPTIONS method:
@@ -1009,7 +1112,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition options(String path, Route.ZeroArgHandler handler);
+  default Route.Definition options(String path, Route.ZeroArgHandler handler) {
+    return appendDefinition(OPTIONS, path, handler);
+  }
 
   /**
    * Append a route that supports HTTP OPTIONS method:
@@ -1026,7 +1131,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition options(String path, Route.Filter filter);
+  default Route.Definition options(String path, Route.Filter filter) {
+    return appendDefinition(OPTIONS, path, filter);
+  }
 
   /**
    * Append a new route that automatically handles OPTIONS requests.
@@ -1048,7 +1155,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition options();
+  default Route.Definition options() {
+    return appendDefinition(OPTIONS, "*", Jooby.handler(OptionsHandler.class)).name("*.options");
+  }
 
   /**
    * Append route that supports HTTP PUT method:
@@ -1081,7 +1190,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition put(String path, Route.Handler handler);
+  default Route.Definition put(String path, Route.Handler handler) {
+    return appendDefinition(PUT, path, handler);
+  }
 
   /**
    * Append three routes that supports HTTP PUT method on the same handler:
@@ -1098,7 +1209,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection put(String path1, String path2, Route.Handler handler);
+  default Route.Collection put(String path1, String path2, Route.Handler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{put(path1, handler), put(path2, handler)});
+  }
 
   /**
    * Append three routes that supports HTTP PUT method on the same handler:
@@ -1116,7 +1230,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection put(String path1, String path2, String path3, Route.Handler handler);
+  default Route.Collection put(String path1, String path2, String path3, Route.Handler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{put(path1, handler), put(path2, handler), put(path3, handler)});
+  }
 
   /**
    * Append route that supports HTTP PUT method:
@@ -1149,7 +1266,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition put(String path, Route.OneArgHandler handler);
+  default Route.Definition put(String path, Route.OneArgHandler handler) {
+    return appendDefinition(PUT, path, handler);
+  }
 
   /**
    * Append three routes that supports HTTP PUT method on the same handler:
@@ -1166,7 +1285,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection put(String path1, String path2, Route.OneArgHandler handler);
+  default Route.Collection put(String path1, String path2, Route.OneArgHandler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{put(path1, handler), put(path2, handler)});
+  }
 
   /**
    * Append three routes that supports HTTP PUT method on the same handler:
@@ -1186,7 +1308,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection put(String path1, String path2, String path3, Route.OneArgHandler handler);
+  default Route.Collection put(String path1, String path2, String path3, Route.OneArgHandler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{put(path1, handler), put(path2, handler), put(path3, handler)});
+  }
 
   /**
    * Append route that supports HTTP PUT method:
@@ -1219,7 +1344,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition put(String path, Route.ZeroArgHandler handler);
+  default Route.Definition put(String path, Route.ZeroArgHandler handler) {
+    return appendDefinition(PUT, path, handler);
+  }
 
   /**
    * Append three routes that supports HTTP PUT method on the same handler:
@@ -1238,7 +1365,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection put(String path1, String path2, Route.ZeroArgHandler handler);
+  default Route.Collection put(String path1, String path2, Route.ZeroArgHandler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{put(path1, handler), put(path2, handler)});
+  }
 
   /**
    * Append three routes that supports HTTP PUT method on the same handler:
@@ -1258,7 +1388,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection put(String path1, String path2, String path3, Route.ZeroArgHandler handler);
+  default Route.Collection put(String path1, String path2, String path3, Route.ZeroArgHandler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{put(path1, handler), put(path2, handler), put(path3, handler)});
+  }
 
   /**
    * Append route that supports HTTP PUT method:
@@ -1274,7 +1407,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition put(String path, Route.Filter filter);
+  default Route.Definition put(String path, Route.Filter filter) {
+    return appendDefinition(PUT, path, filter);
+  }
 
   /**
    * Append three routes that supports HTTP PUT method on the same handler:
@@ -1291,7 +1426,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection put(String path1, String path2, Route.Filter filter);
+  default Route.Collection put(String path1, String path2, Route.Filter filter) {
+    return new Route.Collection(
+            new Route.Definition[]{put(path1, filter), put(path2, filter)});
+  }
 
   /**
    * Append three routes that supports HTTP PUT method on the same handler:
@@ -1311,7 +1449,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection put(String path1, String path2, String path3, Route.Filter filter);
+  default Route.Collection put(String path1, String path2, String path3, Route.Filter filter) {
+    return new Route.Collection(
+            new Route.Definition[]{put(path1, filter), put(path2, filter), put(path3, filter)});
+  }
 
   /**
    * Append route that supports HTTP PATCH method:
@@ -1344,7 +1485,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition patch(String path, Route.Handler handler);
+  default Route.Definition patch(String path, Route.Handler handler) {
+    return appendDefinition(PATCH, path, handler);
+  }
 
   /**
    * Append three routes that supports HTTP PATCH method on the same handler:
@@ -1361,7 +1504,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection patch(String path1, String path2, Route.Handler handler);
+  default Route.Collection patch(String path1, String path2, Route.Handler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{patch(path1, handler), patch(path2, handler)});
+  }
 
   /**
    * Append three routes that supports HTTP PATCH method on the same handler:
@@ -1378,7 +1524,11 @@ public interface Router {
    * @param handler A handler to execute.
    * @return A new route definition.
    */
-  Route.Collection patch(String path1, String path2, String path3, Route.Handler handler);
+  default Route.Collection patch(String path1, String path2, String path3, Route.Handler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{patch(path1, handler), patch(path2, handler),
+                patch(path3, handler)});
+  }
 
   /**
    * Append route that supports HTTP PATCH method:
@@ -1415,7 +1565,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition patch(String path, Route.OneArgHandler handler);
+  default Route.Definition patch(String path, Route.OneArgHandler handler) {
+    return appendDefinition(PATCH, path, handler);
+  }
 
   /**
    * Append three routes that supports HTTP PATCH method on the same handler:
@@ -1434,7 +1586,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection patch(String path1, String path2, Route.OneArgHandler handler);
+  default Route.Collection patch(String path1, String path2, Route.OneArgHandler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{patch(path1, handler), patch(path2, handler)});
+  }
 
   /**
    * Append three routes that supports HTTP PATCH method on the same handler:
@@ -1454,7 +1609,11 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection patch(String path1, String path2, String path3, Route.OneArgHandler handler);
+  default Route.Collection patch(String path1, String path2, String path3, Route.OneArgHandler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{patch(path1, handler), patch(path2, handler),
+                patch(path3, handler)});
+  }
 
   /**
    * Append route that supports HTTP PATCH method:
@@ -1491,7 +1650,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition patch(String path, Route.ZeroArgHandler handler);
+  default Route.Definition patch(String path, Route.ZeroArgHandler handler) {
+    return appendDefinition(PATCH, path, handler);
+  }
 
   /**
    * Append three routes that supports HTTP PATCH method on the same handler:
@@ -1510,7 +1671,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection patch(String path1, String path2, Route.ZeroArgHandler handler);
+  default Route.Collection patch(String path1, String path2, Route.ZeroArgHandler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{patch(path1, handler), patch(path2, handler)});
+  }
 
   /**
    * Append three routes that supports HTTP PATCH method on the same handler:
@@ -1530,7 +1694,11 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection patch(String path1, String path2, String path3, Route.ZeroArgHandler handler);
+  default Route.Collection patch(String path1, String path2, String path3, Route.ZeroArgHandler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{patch(path1, handler), patch(path2, handler),
+                patch(path3, handler)});
+  }
 
   /**
    * Append route that supports HTTP PATCH method:
@@ -1546,7 +1714,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition patch(String path, Route.Filter filter);
+  default Route.Definition patch(String path, Route.Filter filter) {
+    return appendDefinition(PATCH, path, filter);
+  }
 
   /**
    * Append three routes that supports HTTP PATCH method on the same handler:
@@ -1563,7 +1733,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection patch(String path1, String path2, Route.Filter filter);
+  default Route.Collection patch(String path1, String path2, Route.Filter filter) {
+    return new Route.Collection(
+            new Route.Definition[]{patch(path1, filter), patch(path2, filter)});
+  }
 
   /**
    * Append three routes that supports HTTP PATCH method on the same handler:
@@ -1581,7 +1754,11 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection patch(String path1, String path2, String path3, Route.Filter filter);
+  default Route.Collection patch(String path1, String path2, String path3, Route.Filter filter) {
+    return new Route.Collection(
+            new Route.Definition[]{patch(path1, filter), patch(path2, filter),
+                patch(path3, filter)});
+  }
 
   /**
    * Append a route that supports HTTP DELETE method:
@@ -1618,7 +1795,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition delete(String path, Route.Handler handler);
+  default Route.Definition delete(String path, Route.Handler handler) {
+    return appendDefinition(DELETE, path, handler);
+  }
 
   /**
    * Append three routes that supports HTTP DELETE method on the same handler:
@@ -1637,7 +1816,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection delete(String path1, String path2, Route.Handler handler);
+  default Route.Collection delete(String path1, String path2, Route.Handler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{delete(path1, handler), delete(path2, handler)});
+  }
 
   /**
    * Append three routes that supports HTTP DELETE method on the same handler:
@@ -1657,7 +1839,11 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection delete(String path1, String path2, String path3, Route.Handler handler);
+  default Route.Collection delete(String path1, String path2, String path3, Route.Handler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{delete(path1, handler), delete(path2, handler),
+                delete(path3, handler)});
+  }
 
   /**
    * Append route that supports HTTP DELETE method:
@@ -1694,7 +1880,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition delete(String path, Route.OneArgHandler handler);
+  default Route.Definition delete(String path, Route.OneArgHandler handler) {
+    return appendDefinition(DELETE, path, handler);
+  }
 
   /**
    * Append three routes that supports HTTP DELETE method on the same handler:
@@ -1713,7 +1901,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection delete(String path1, String path2, Route.OneArgHandler handler);
+  default Route.Collection delete(String path1, String path2, Route.OneArgHandler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{delete(path1, handler), delete(path2, handler)});
+  }
 
   /**
    * Append three routes that supports HTTP DELETE method on the same handler:
@@ -1733,7 +1924,11 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection delete(String path1, String path2, String path3, Route.OneArgHandler handler);
+  default Route.Collection delete(String path1, String path2, String path3, Route.OneArgHandler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{delete(path1, handler), delete(path2, handler),
+                delete(path3, handler)});
+  }
 
   /**
    * Append route that supports HTTP DELETE method:
@@ -1770,7 +1965,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition delete(String path, Route.ZeroArgHandler handler);
+  default Route.Definition delete(String path, Route.ZeroArgHandler handler) {
+    return appendDefinition(DELETE, path, handler);
+  }
 
   /**
    * Append three routes that supports HTTP DELETE method on the same handler:
@@ -1787,7 +1984,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection delete(String path1, String path2, Route.ZeroArgHandler handler);
+  default Route.Collection delete(String path1, String path2, Route.ZeroArgHandler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{delete(path1, handler), delete(path2, handler)});
+  }
 
   /**
    * Append three routes that supports HTTP DELETE method on the same handler:
@@ -1805,7 +2005,11 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection delete(String path1, String path2, String path3, Route.ZeroArgHandler handler);
+  default Route.Collection delete(String path1, String path2, String path3, Route.ZeroArgHandler handler) {
+    return new Route.Collection(
+            new Route.Definition[]{delete(path1, handler), delete(path2, handler),
+                delete(path3, handler)});
+  }
 
   /**
    * Append a route that supports HTTP DELETE method:
@@ -1822,7 +2026,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition delete(String path, Route.Filter filter);
+  default Route.Definition delete(String path, Route.Filter filter) {
+    return appendDefinition(DELETE, path, filter);
+  }
 
   /**
    * Append three routes that supports HTTP DELETE method on the same handler:
@@ -1840,7 +2046,10 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection delete(String path1, String path2, Route.Filter filter);
+  default Route.Collection delete(String path1, String path2, Route.Filter filter) {
+    return new Route.Collection(
+            new Route.Definition[]{delete(path1, filter), delete(path2, filter)});
+  }
 
   /**
    * Append three routes that supports HTTP DELETE method on the same handler:
@@ -1859,7 +2068,11 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Collection delete(String path1, String path2, String path3, Route.Filter filter);
+  default Route.Collection delete(String path1, String path2, String path3, Route.Filter filter) {
+    return new Route.Collection(
+            new Route.Definition[]{delete(path1, filter), delete(path2, filter),
+                delete(path3, filter)});
+  }
 
   /**
    * Append a route that supports HTTP TRACE method:
@@ -1875,7 +2088,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition trace(String path, Route.Handler handler);
+  default Route.Definition trace(String path, Route.Handler handler) {
+    return appendDefinition(TRACE, path, handler);
+  }
 
   /**
    * Append route that supports HTTP TRACE method:
@@ -1891,7 +2106,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition trace(String path, Route.OneArgHandler handler);
+  default Route.Definition trace(String path, Route.OneArgHandler handler) {
+    return appendDefinition(TRACE, path, handler);
+  }
 
   /**
    * Append route that supports HTTP TRACE method:
@@ -1907,7 +2124,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition trace(String path, Route.ZeroArgHandler handler);
+  default Route.Definition trace(String path, Route.ZeroArgHandler handler) {
+    return appendDefinition(TRACE, path, handler);
+  }
 
   /**
    * Append a route that supports HTTP TRACE method:
@@ -1923,7 +2142,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition trace(String path, Route.Filter filter);
+  default Route.Definition trace(String path, Route.Filter filter) {
+    return appendDefinition(TRACE, path, filter);
+  }
 
   /**
    * Append a default trace implementation under the given path. Default trace response, looks
@@ -1938,7 +2159,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition trace();
+  default Route.Definition trace() {
+    return appendDefinition(TRACE, "*", Jooby.handler(TraceHandler.class)).name("*.trace");
+  }
 
   /**
    * Append a route that supports HTTP CONNECT method:
@@ -1953,7 +2176,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition connect(String path, Route.Handler handler);
+  default Route.Definition connect(String path, Route.Handler handler) {
+    return appendDefinition(CONNECT, path, handler);
+  }
 
   /**
    * Append route that supports HTTP CONNECT method:
@@ -1969,7 +2194,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition connect(String path, Route.OneArgHandler handler);
+  default Route.Definition connect(String path, Route.OneArgHandler handler) {
+    return appendDefinition(CONNECT, path, handler);
+  }
 
   /**
    * Append route that supports HTTP CONNECT method:
@@ -1985,7 +2212,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition connect(String path, Route.ZeroArgHandler handler);
+  default Route.Definition connect(String path, Route.ZeroArgHandler handler) {
+    return appendDefinition(CONNECT, path, handler);
+  }
 
   /**
    * Append a route that supports HTTP CONNECT method:
@@ -2001,7 +2230,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition connect(String path, Route.Filter filter);
+  default Route.Definition connect(String path, Route.Filter filter) {
+    return appendDefinition(CONNECT, path, filter);
+  }
 
   /**
    * Static files handler.
@@ -2455,7 +2686,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition before(String method, String pattern, Route.Before handler);
+  default Route.Definition before(String method, String pattern, Route.Before handler) {
+    return appendDefinition(method, pattern, handler);
+  }
 
   /**
    * <h2>before</h2>
@@ -2772,7 +3005,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition after(String method, String pattern, Route.After handler);
+  default Route.Definition after(String method, String pattern, Route.After handler) {
+    return appendDefinition(method, pattern, handler);
+  }
 
   /**
    * <h2>after</h2>
@@ -3272,7 +3507,9 @@ public interface Router {
    * @return A new route definition.
    */
   @Nonnull
-  Route.Definition complete(String method, String pattern, Route.Complete handler);
+  default Route.Definition complete(String method, String pattern, Route.Complete handler) {
+    return appendDefinition(method, pattern, handler);
+  }
 
   /**
    * <h2>complete</h2>
@@ -3409,7 +3646,9 @@ public interface Router {
    * @return A new WebSocket definition.
    */
   @Nonnull
-  WebSocket.Definition ws(String path, WebSocket.OnOpen handler);
+  default WebSocket.Definition ws(String path, WebSocket.OnOpen handler) {
+    return appendDefinition(new WebSocket.Definition(path, handler));
+  }
 
   /**
    * Append a new WebSocket handler under the given path.
@@ -3438,7 +3677,19 @@ public interface Router {
    * @return A new WebSocket definition.
    */
   @Nonnull
-  <T> WebSocket.Definition ws(String path, Class<? extends WebSocket.OnMessage<T>> handler);
+  default <T> WebSocket.Definition ws(String path, Class<? extends WebSocket.OnMessage<T>> handler) {
+    String fpath = Optional.ofNullable(handler.getAnnotation(org.jooby.mvc.Path.class))
+            .map(it -> path + "/" + it.value()[0])
+            .orElse(path);
+
+        WebSocket.Definition ws = ws(fpath, MvcWebSocket.newWebSocket(handler));
+
+        Optional.ofNullable(handler.getAnnotation(Consumes.class))
+            .ifPresent(consumes -> Arrays.asList(consumes.value()).forEach(ws::consumes));
+        Optional.ofNullable(handler.getAnnotation(Produces.class))
+            .ifPresent(produces -> Arrays.asList(produces.value()).forEach(ws::produces));
+        return ws;
+  }
 
   /**
    * Add a server-sent event handler.
@@ -3457,7 +3708,9 @@ public interface Router {
    * @return A route definition.
    */
   @Nonnull
-  Route.Definition sse(String path, Sse.Handler handler);
+  default Route.Definition sse(String path, Sse.Handler handler) {
+    return appendDefinition(GET, path, handler).consumes(MediaType.sse);
+  }
 
   /**
    * Add a server-sent event handler.
@@ -3476,7 +3729,9 @@ public interface Router {
    * @return A route definition.
    */
   @Nonnull
-  Route.Definition sse(String path, Sse.Handler1 handler);
+  default Route.Definition sse(String path, Sse.Handler1 handler) {
+    return appendDefinition(GET, path, handler).consumes(MediaType.sse);
+  }
 
   /**
    * Apply common configuration and attributes to a group of routes:
@@ -3691,7 +3946,11 @@ public interface Router {
    * @see Deferred
    */
   @Nonnull
-  Route.OneArgHandler promise(Deferred.Initializer initializer);
+  default Route.OneArgHandler promise(Deferred.Initializer initializer) {
+    return req -> {
+        return new Deferred(initializer);
+      };
+  }
 
   /**
    * Produces a deferred response, useful for async request processing. Like
@@ -3725,7 +3984,9 @@ public interface Router {
    * @see Deferred
    */
   @Nonnull
-  Route.OneArgHandler promise(String executor, Deferred.Initializer initializer);
+  default Route.OneArgHandler promise(String executor, Deferred.Initializer initializer) {
+    return req -> new Deferred(executor, initializer);
+  }
 
   /**
    * Produces a deferred response, useful for async request processing. Like
@@ -3754,7 +4015,11 @@ public interface Router {
    * @see Deferred
    */
   @Nonnull
-  Route.OneArgHandler promise(Deferred.Initializer0 initializer);
+  default Route.OneArgHandler promise(Deferred.Initializer0 initializer) {
+    return req -> {
+        return new Deferred(initializer);
+      };
+  }
 
   /**
    * Produces a deferred response, useful for async request processing. Like
@@ -3778,7 +4043,9 @@ public interface Router {
    * @see Deferred
    */
   @Nonnull
-  Route.OneArgHandler promise(String executor, Deferred.Initializer0 initializer);
+  default Route.OneArgHandler promise(String executor, Deferred.Initializer0 initializer) {
+    return req -> new Deferred(executor, initializer);
+  }
 
   /**
    * Functional version of {@link #promise(org.jooby.Deferred.Initializer)}. To use ideally with one
