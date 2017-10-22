@@ -239,140 +239,140 @@ import org.jooby.handlers.AssetHandler;
  * @since 1.2.0
  */
 public class NoOpRouter implements Router {
-	public static NoOpRouter caseSensitive() {
-		return CASE_SENSITIVE;
-	}
+  public static NoOpRouter caseSensitive() {
+    return CASE_SENSITIVE;
+  }
 
-	public static NoOpRouter caseInsensitive() {
-		return CASE_INSENSITIVE;
-	}
+  public static NoOpRouter caseInsensitive() {
+    return CASE_INSENSITIVE;
+  }
 
-	public static NoOpRouter caseSensitive(String prefix) {
-		return new NoOpRouter(true, prefix);
-	}
+  public static NoOpRouter caseSensitive(String prefix) {
+    return new NoOpRouter(true, prefix);
+  }
 
-	public static NoOpRouter caseInsensitive(String prefix) {
-		return new NoOpRouter(false, prefix);
-	}
+  public static NoOpRouter caseInsensitive(String prefix) {
+    return new NoOpRouter(false, prefix);
+  }
 
-	private static final NoOpRouter CASE_SENSITIVE = new NoOpRouter(true, null);
-	private static final NoOpRouter CASE_INSENSITIVE = new NoOpRouter(false, null);
+  private static final NoOpRouter CASE_SENSITIVE = new NoOpRouter(true, null);
+  private static final NoOpRouter CASE_INSENSITIVE = new NoOpRouter(false, null);
 
-	private final boolean caseSensitiveRouting;
-	private final String prefix;
+  private final boolean caseSensitiveRouting;
+  private final String prefix;
 
-	private NoOpRouter(boolean caseSensitiveRouting, String prefix) {
-		this.caseSensitiveRouting = caseSensitiveRouting;
-		this.prefix = prefix;
-	}
+  private NoOpRouter(boolean caseSensitiveRouting, String prefix) {
+    this.caseSensitiveRouting = caseSensitiveRouting;
+    this.prefix = prefix;
+  }
 
-	@Override
-	public Route.Definition appendDefinition(String method, String pattern, Filter filter) {
-	    Route.Definition route = new Route.Definition(method, pattern, filter,
-	        caseSensitiveRouting);
-	    if (prefix != null) {
-	      route.prefix = prefix;
-	      // reset name will update the name if prefix != null
-	      route.name(route.name());
-	    }
-	    return route;
-	}
+  @Override
+  public Route.Definition appendDefinition(String method, String pattern, Filter filter) {
+      Route.Definition route = new Route.Definition(method, pattern, filter,
+          caseSensitiveRouting);
+      if (prefix != null) {
+        route.prefix = prefix;
+        // reset name will update the name if prefix != null
+        route.name(route.name());
+      }
+      return route;
+  }
 
-	/** Has no effect for NoOpRouter. */
-	@Deprecated
-	@Override
-	public Route.Definition appendDefinition(Route.Definition definition) {
-		return definition;
-	}
+  /** Has no effect for NoOpRouter. */
+  @Deprecated
+  @Override
+  public Route.Definition appendDefinition(Route.Definition definition) {
+    return definition;
+  }
 
-	/** Has no effect for NoOpRouter. */
-	@Deprecated
-	@Override
-	public WebSocket.Definition appendDefinition(WebSocket.Definition definition) {
-		return definition;
-	}
+  /** Has no effect for NoOpRouter. */
+  @Deprecated
+  @Override
+  public WebSocket.Definition appendDefinition(WebSocket.Definition definition) {
+    return definition;
+  }
 
-	/** Unsupported for NoOpRouter. */
-	@Deprecated
-	@Override
-	public Router use(Jooby app) {
-		throw new UnsupportedOperationException();
-	}
+  /** Unsupported for NoOpRouter. */
+  @Deprecated
+  @Override
+  public Router use(Jooby app) {
+    throw new UnsupportedOperationException();
+  }
 
-	/** Unsupported for NoOpRouter. */
-	@Deprecated
-	@Override
-	public Router path(String path, Runnable action) {
-		throw new UnsupportedOperationException();
-	}
+  /** Unsupported for NoOpRouter. */
+  @Deprecated
+  @Override
+  public Router path(String path, Runnable action) {
+    throw new UnsupportedOperationException();
+  }
 
-	/** Unsupported for NoOpRouter. */
-	@Deprecated
-	@Override
-	public Router use(String path, Jooby app) {
-		throw new UnsupportedOperationException();
-	}
+  /** Unsupported for NoOpRouter. */
+  @Deprecated
+  @Override
+  public Router use(String path, Jooby app) {
+    throw new UnsupportedOperationException();
+  }
 
-	/** Unsupported for NoOpRouter. */
-	@Deprecated
-	@Override
-	public Route.Group use(String pattern) {
-		throw new UnsupportedOperationException();
-	}
+  /** Unsupported for NoOpRouter. */
+  @Deprecated
+  @Override
+  public Route.Group use(String pattern) {
+    throw new UnsupportedOperationException();
+  }
 
-	/** Unsupported for NoOpRouter. */
-	@Deprecated
-	@Override
-	public Collection use(Class<?> routeClass) {
-		throw new UnsupportedOperationException();
-	}
+  /** Unsupported for NoOpRouter. */
+  @Deprecated
+  @Override
+  public Collection use(Class<?> routeClass) {
+    throw new UnsupportedOperationException();
+  }
 
-	/** Unsupported for NoOpRouter. */
-	@Deprecated
-	@Override
-	public Collection with(Runnable callback) {
-		throw new UnsupportedOperationException();
-	}
+  /** Unsupported for NoOpRouter. */
+  @Deprecated
+  @Override
+  public Collection with(Runnable callback) {
+    throw new UnsupportedOperationException();
+  }
 
-	/** Unsupported for NoOpRouter. */
-	@Deprecated
-	@Override
-	public Router map(Mapper<?> mapper) {
-		throw new UnsupportedOperationException();
-	}
+  /** Unsupported for NoOpRouter. */
+  @Deprecated
+  @Override
+  public Router map(Mapper<?> mapper) {
+    throw new UnsupportedOperationException();
+  }
 
-	/** Unsupported for NoOpRouter. */
-	@Deprecated
-	@Override
-	public Router err(org.jooby.Err.Handler err) {
-		throw new UnsupportedOperationException();
-	}
+  /** Unsupported for NoOpRouter. */
+  @Deprecated
+  @Override
+  public Router err(org.jooby.Err.Handler err) {
+    throw new UnsupportedOperationException();
+  }
 
-	/** Unsupported for NoOpRouter. */
-	@Deprecated
-	@Override
-	public Route.Definition assets(final String path) {
-		throw new UnsupportedOperationException();
-	}
+  /** Unsupported for NoOpRouter. */
+  @Deprecated
+  @Override
+  public Route.Definition assets(final String path) {
+    throw new UnsupportedOperationException();
+  }
 
-	/** Unsupported for NoOpRouter. */
-	@Deprecated
-	@Override
-	public Definition assets(String path, Path basedir) {
-		throw new UnsupportedOperationException();
-	}
+  /** Unsupported for NoOpRouter. */
+  @Deprecated
+  @Override
+  public Definition assets(String path, Path basedir) {
+    throw new UnsupportedOperationException();
+  }
 
-	/** Unsupported for NoOpRouter. */
-	@Deprecated
-	@Override
-	public Definition assets(String path, String location) {
-		throw new UnsupportedOperationException();
-	}
+  /** Unsupported for NoOpRouter. */
+  @Deprecated
+  @Override
+  public Definition assets(String path, String location) {
+    throw new UnsupportedOperationException();
+  }
 
-	/** Unsupported for NoOpRouter. */
-	@Deprecated
-	@Override
-	public Definition assets(String path, AssetHandler handler) {
-		throw new UnsupportedOperationException();
-	}
+  /** Unsupported for NoOpRouter. */
+  @Deprecated
+  @Override
+  public Definition assets(String path, AssetHandler handler) {
+    throw new UnsupportedOperationException();
+  }
 }
