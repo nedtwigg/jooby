@@ -228,6 +228,29 @@ import javax.annotation.Nonnull;
  * @since 0.16.0
  */
 public interface Router {
+  /**
+   * Keep track of routes in the order user define them.
+   *
+   * @param method Route method.
+   * @param pattern Route pattern.
+   * @param filter Route filter.
+   * @return The same route definition.
+   */
+  Route.Definition appendDefinition(String method, String pattern, Route.Filter filter);
+
+  /**
+   * Keep track of routes in the order user define them.
+   *
+   * @param definition Route definition.
+   */
+  Route.Definition appendDefinition(Route.Definition definition);
+
+  /**
+   * Keep track of routes in the order user define them.
+   *
+   * @param definition Route definition.
+   */
+  WebSocket.Definition appendDefinition(WebSocket.Definition definition);
 
   /**
    * Decode a path by delegating to {@link URLDecoder#decode(String, String)}.

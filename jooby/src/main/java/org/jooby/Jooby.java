@@ -1943,7 +1943,8 @@ public class Jooby implements Router, LifeCycle, Registry {
    * @param filter Route filter.
    * @return The same route definition.
    */
-  private Route.Definition appendDefinition(String method, String pattern, Route.Filter filter) {
+  @Override
+  public Route.Definition appendDefinition(String method, String pattern, Route.Filter filter) {
     String pathPattern = this.path == null ? pattern : this.path + "/" + pattern;
     Route.Definition route = new Route.Definition(method, pathPattern, filter,
         caseSensitiveRouting);
@@ -1952,6 +1953,16 @@ public class Jooby implements Router, LifeCycle, Registry {
       // reset name will update the name if prefix != null
       route.name(route.name());
     }
+    return appendDefinition(route);
+  }
+
+  /**
+   * Keep track of routes in the order user define them.
+   *
+   * @param definition Route definition.
+   */
+  @Override
+  public Route.Definition appendDefinition(Route.Definition route) {
     bag.add(route);
     return route;
   }
@@ -2016,10 +2027,14 @@ public class Jooby implements Router, LifeCycle, Registry {
   }
 
   @Override
+  public WebSocket.Definition appendDefinition(WebSocket.Definition definition) {
+    checkArgument(bag.add(definition), "Duplicated path: '%s'", path);
+    return definition;
+  }
+
+  @Override
   public WebSocket.Definition ws(final String path, final WebSocket.OnOpen handler) {
-    WebSocket.Definition ws = new WebSocket.Definition(path, handler);
-    checkArgument(bag.add(ws), "Duplicated path: '%s'", path);
-    return ws;
+    return appendDefinition(new WebSocket.Definition(path, handler));
   }
 
   @Override
