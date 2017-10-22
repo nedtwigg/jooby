@@ -221,7 +221,9 @@ import org.jooby.handlers.AssetHandler;
  *
  *   @Override
  *   public void configure(Env env, Config conf, Binder binder) throws Throwable {
- *     env.router().appendDefinition(USER_TITLE);
+ *     env.router().append(USER_TITLE, req -> {
+ *       return req.params("user") + " wrote " + req.params("title");
+ *     });
  *   }
  *
  *   public static String urlUserTitle(String user, String title) {

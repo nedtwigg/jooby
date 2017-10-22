@@ -225,6 +225,8 @@ import java.util.function.Predicate;
 
 import com.google.common.escape.Escaper;
 import com.google.common.net.PercentEscaper;
+
+import org.jooby.Route.Filter;
 import org.jooby.Route.Mapper;
 import org.jooby.funzy.Try;
 import org.jooby.handlers.AssetHandler;
@@ -260,6 +262,46 @@ public interface Router {
    * @param definition Route definition.
    */
   Route.Definition appendDefinition(Route.Definition definition);
+
+  /**
+   * Keep track of routes in the order user define them, using the given filter.
+   *
+   * @param definition Route definition
+   * @param filter Route filter
+   */
+  default Route.Definition append(Route.Definition definition, Route.Filter filter) {
+    return appendDefinition(definition.withFilter(filter));
+  }
+
+  /**
+   * Keep track of routes in the order user define them, using the given handler.
+   *
+   * @param definition Route definition
+   * @param handler Route handler
+   */
+  default Route.Definition append(Route.Definition definition, Route.Handler handler) {
+    return appendDefinition(definition.withFilter(handler));
+  }
+
+  /**
+   * Keep track of routes in the order user define them, using the given handler.
+   *
+   * @param definition Route definition
+   * @param handler Route handler
+   */
+  default Route.Definition append(Route.Definition definition, Route.OneArgHandler handler) {
+    return appendDefinition(definition.withFilter(handler));
+  }
+
+  /**
+   * Keep track of routes in the order user define them, using the given handler.
+   *
+   * @param definition Route definition
+   * @param handler Route handler
+   */
+  default Route.Definition append(Route.Definition definition, Route.ZeroArgHandler handler) {
+    return appendDefinition(definition.withFilter(handler));
+  }
 
   /**
    * Keep track of routes in the order user define them.

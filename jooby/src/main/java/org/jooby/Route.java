@@ -1451,6 +1451,28 @@ public interface Route {
     }
 
     /**
+     * Returns a new Definition where the filter has
+     * been replaced with the given argument.
+     *
+     * @param filter A filter which will replace the previous filter
+     * @return a new Definition where the previous filter has been replaces with the new argument
+     */
+    Definition withFilter(Filter filter) {
+      return new Definition(this, filter);
+    }
+
+    private Definition(Definition orig, Filter filter) {
+      this.method = orig.method;
+      this.cpattern = orig.cpattern;
+      this.pattern = orig.pattern;
+      this.filter = filter;
+      SourceProvider.INSTANCE.get().ifPresent(source -> {
+        this.line = source.getLineNumber();
+        this.declaringClass = source.getClassName();
+      });
+    }
+
+    /**
      * <h1>Path Patterns</h1>
      * <p>
      * Jooby supports Ant-style path patterns:
@@ -1846,7 +1868,6 @@ public interface Route {
       return new RouteImpl(filter, this, method, matcher.path(), produces,
           matcher.vars(), mapper, source);
     }
-
   }
 
   /**
